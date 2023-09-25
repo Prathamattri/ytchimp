@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String      @id @default(uuid())
+  email             String      @unique
+  password          String
+  name              String
+  gravatar          String?
+  createdWorkspaces Workspace[] @relation("Creation")
+  participantInWS   Workspace[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id             String    @id @default(uuid())
+  name           String
+  creator        User      @relation("Creation", fields: [creatorId], references: [id])
+  creatorId      String
+  participants   User[]
+  workspaceToken String?
+  expiresIn      DateTime?
+  createdOn      DateTime  @default(now())
+
+  @@map("workspaces")
+}
+
+// model User {
+//   id                Int             @id @default(autoincrement())
+//   name              String?
+//   email             String
+//   password          String
+//   gravatar          String?
+//   createdWorkspaces Workspace[]     @relation("WorkspaceOwner")
+//   participantInWS   Workspace[]     @relation("WorkspaceParticipants")
+//   userWorkspaces    UserWorkspace[]
+
+//   @@map(name: "users")
+// }
+
+// model Workspace {
+//   id             Int             @id @default(autoincrement())
+//   ownerId        Int
+//   owner          User            @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+//   participants   User[]          @relation("WorkspaceParticipants")
+//   workspaceName  String?
+//   workspaceToken String?
+//   expiresIn      Int?
+//   userWorkspaces UserWorkspace[]
+
+//   @@map(name: "workspaces")
+// }
+
+// model UserWorkspace {
+//   userId      Int
+//   workspaceId Int
+
+//   user      User      @relation(fields: [userId], references: [id])
+//   workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+//   @@id([userId, workspaceId])
+//   @@map(name: "user_workspace")
+// }
