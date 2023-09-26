@@ -1,6 +1,7 @@
 import { WorkspaceObjectTypes } from "common";
 import React from "react";
 import { Box, Button, Grid } from "@mui/material";
+import Link from "next/link";
 const WorkspaceCard = (
   props: Pick<WorkspaceObjectTypes, "name" | "participants" | "id">
 ) => {
@@ -28,7 +29,9 @@ const WorkspaceCard = (
           <Button variant="outlined">Edit</Button>
         </Grid>
         <Grid item>
-          <Button variant="contained">Use</Button>
+          <Link href={`/workspace/${props.id}`}>
+            <Button variant="contained">Use</Button>
+          </Link>
         </Grid>
       </Grid>
     </Grid>

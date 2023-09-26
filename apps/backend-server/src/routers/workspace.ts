@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import auth from "../middleware/auth";
+import uploadFile from "../utils/yt_auth";
+import multer from "multer";
+
+const upload = multer({ dest: "../utils/videos" });
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -131,12 +135,12 @@ router.post("/:workspaceId/insert", auth, async (req: any, res: any) => {
   }
 });
 
-//  @method  PATCH
+//  @method  PUT
 //  @route   /workspace/:workspaceId/remove
 //  @access  Private
 //  @desc    Remove participant from workspace
 
-router.patch("/:workspaceId/remove", auth, async (req: any, res: any) => {
+router.put("/:workspaceId/remove", auth, async (req: any, res: any) => {
   try {
     const userID = req.user.user;
     const workspaceId = req.params.workspaceId;
@@ -178,5 +182,33 @@ router.patch("/:workspaceId/remove", auth, async (req: any, res: any) => {
     await prisma.$disconnect();
   }
 });
+
+//  @method  POST
+//  @route   /workspace/:workspaceId/upload
+//  @access  Private
+//  @desc    Authorize workspace to handle YT accounts
+
+router.post(
+  "/:workspaceId/upload",
+  [auth, upload.single("vidFile")],
+  async (req: any, res: any) => {
+    try {
+      console.log(req);
+
+      res.send("hi");
+      // const data = await uploadFile(
+      //   "Test video 1",
+      //   "Test video description \nNew line here",
+      //   "",
+      //   req.params.workspaceId
+      // );
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ msg: "Server Error encountered" });
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+);
 
 export default router;

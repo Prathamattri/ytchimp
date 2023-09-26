@@ -2,6 +2,7 @@ import { google } from "googleapis";
 import { authenticate } from "@google-cloud/local-auth";
 import { PrismaClient } from "@prisma/client";
 import path from "path";
+import fs from "fs";
 
 const prisma = new PrismaClient();
 var scopes = [
@@ -12,20 +13,57 @@ var scopes = [
 //Initializing the youtube api library
 const youtube = google.youtube("v3");
 
-async function uploadFile(filename: string) {
-  const auth = await authenticate({
-    keyfilePath: path.join(__dirname, "./oauth.json"),
-    scopes,
+async function uploadFile(
+  title: string,
+  description: string,
+  filename: string,
+  id: string
+) {
+  const authToken = await prisma.workspace.findFirst({
+    where: {
+      id: id,
+    },
+    select: {
+      workspaceToken: true,
+    },
   });
+  if (!authToken?.workspaceToken) {
+    const auth = await authenticate({
+      keyfilePath: path.join(__dirname, "./oauth.json"),
+      scopes,
+    });
+    await prisma.workspace.update({
+      where: {
+        id: id,
+      },
+      data: {
+        workspaceToken: JSON.stringify(auth),
+      },
+    });
 
-  // await prisma.workspace.update({
-  //   where:{
-  //     id: "abc"
-  //   },data:{
-  //     workspaceToken: JSON.stringify(auth)
-  //   }
-  // })
-  google.options({ auth });
+    google.options({ auth });
+  } else {
+    google.options({
+      auth: JSON.parse(JSON.stringify(authToken?.workspaceToken)),
+    });
+  }
+  const response = await youtube.videos.insert({
+    part: ["id", "snippet", "status"],
+    notifySubscribers: false,
+    requestBody: {
+      snippet: {
+        title,
+        description,
+      },
+      status: {
+        privacyStatus: "private",
+      },
+    },
+    media: {
+      body: fs.createReadStream(filename),
+    },
+  });
+  return response.data;
 }
 
 export default uploadFile;
