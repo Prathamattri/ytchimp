@@ -9,12 +9,11 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import axios from "axios";
-import { BASE_URL } from "@/utils";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { userState } from "@/store/atoms/user";
 import { useRouter } from "next/navigation";
 import { userAuthState } from "@/store/selectors/userAuth";
+import api from "@/utils";
 
 function Copyright(props: any) {
   return (
@@ -41,13 +40,14 @@ export default function Login() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
 
-    const res = await axios.post(`${BASE_URL}/user/login`, {
-      email: data.get("email"),
-      password: data.get("password"),
+    const res = await api.post(`/user/login`, {
+      data: {
+        email: data.get("email"),
+        password: data.get("password"),
+      },
     });
     const resData = await res.data;
     if (resData.type === "success") {
-      localStorage.setItem("token", resData.token);
       setUser({
         userEmail: resData.user.email,
         userName: resData.user.name,

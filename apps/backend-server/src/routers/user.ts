@@ -14,7 +14,7 @@ const prisma = new PrismaClient();
 
 router.post("/register", async (req: any, res: any) => {
   try {
-    const { name, email, password }: UserObjectTypes = req.body;
+    const { name, email, password }: UserObjectTypes = req.body.data;
 
     // Check if email already taken
     const user = await prisma.user.findFirst({
@@ -36,6 +36,8 @@ router.post("/register", async (req: any, res: any) => {
       },
       select: {
         id: true,
+        name: true,
+        email: true,
       },
     });
 
@@ -43,7 +45,12 @@ router.post("/register", async (req: any, res: any) => {
       expiresIn: "1d",
     });
 
-    res.json({ message: "User created successfully", token });
+    res.cookie("token", token, { httpOnly: true }).json({
+      message: "User created successfully",
+      user: newUser,
+      type: "success",
+      token,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send({ msg: "Server Error encountered" });
@@ -58,7 +65,7 @@ router.post("/register", async (req: any, res: any) => {
 
 router.post("/login", async (req: any, res: Response) => {
   try {
-    const { email, password }: UserObjectTypes = req.body;
+    const { email, password }: UserObjectTypes = req.body.data;
 
     //Check if email is correct
     const user = await prisma.user.findFirst({
@@ -76,8 +83,7 @@ router.post("/login", async (req: any, res: Response) => {
     const token = jwt.sign({ user: user.id }, process.env.jwtSecret, {
       expiresIn: "1d",
     });
-
-    res.json({
+    res.cookie("token", token, { httpOnly: true }).json({
       type: "success",
       message: "Login Successful",
       user: {
@@ -117,6 +123,16 @@ router.get("/me", auth, async (req: any, res: any) => {
   } finally {
     await prisma.$disconnect();
   }
+});
+
+//  @method  POST
+//  @route   /user/logout
+//  @access  Private
+//  @desc    Logout the user
+
+router.post("/logout", auth, async (req: any, res: Response) => {
+  res.clearCookie("token");
+  res.send("User logged out");
 });
 
 export default router;

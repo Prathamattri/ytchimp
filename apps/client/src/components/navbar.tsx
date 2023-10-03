@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import Loader from "./loader";
+import api from "@/utils";
 
 const Navbar: React.FC = () => {
   const authenticated = useRecoilValue(userAuthState);
@@ -88,7 +89,7 @@ const Navbar: React.FC = () => {
   );
 };
 
-const AuthButtons: React.FC = () => {
+export const AuthButtons: React.FC = () => {
   return (
     <Box
       sx={{
@@ -106,19 +107,34 @@ const AuthButtons: React.FC = () => {
     </Box>
   );
 };
+
 const Workspaces: React.FC = () => {
   const router = useRouter();
   const setUser = useSetRecoilState(userState);
+  async function handleLogout() {
+    try {
+      await api.post(`/user/logout`);
+      localStorage.removeItem("token");
+      setUser({
+        isAuthenticated: false,
+        isLoading: false,
+        userEmail: null,
+        userName: null,
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
   return (
     <Box
       sx={{
         flexGrow: "0",
-        display: { xs: "none  ", md: "flex" },
+        display: "flex",
         gap: { xs: "0.5rem", md: "1rem" },
       }}
     >
       <Link href={"/user/workspaces"}>
-        <Button variant="text">My Workspaces</Button>
+        <Button variant="text">Workspaces</Button>
       </Link>
 
       <Button
@@ -126,15 +142,7 @@ const Workspaces: React.FC = () => {
         sx={{
           mr: 1,
         }}
-        onClick={() => {
-          localStorage.removeItem("token");
-          setUser({
-            isAuthenticated: false,
-            isLoading: false,
-            userEmail: null,
-            userName: null,
-          });
-        }}
+        onClick={handleLogout}
       >
         Logout
       </Button>

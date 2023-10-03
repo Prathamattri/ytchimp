@@ -3,7 +3,20 @@ import { atom } from "recoil";
 export const userWorkspaces = atom({
   key: "userWorkspaces",
   default: {
-    data: [
+    wsCreated: [
+      {
+        id: "",
+        name: "",
+        expiresIn: null,
+        createdOn: null,
+        participants: [
+          {
+            id: "",
+          },
+        ],
+      },
+    ],
+    wsIn: [
       {
         id: "",
         name: "",

@@ -2,88 +2,136 @@ import Loader from "@/components/loader";
 import WorkspaceCard from "@/components/workspaceCard";
 import { userWorkspaces } from "@/store/atoms/workspace";
 import { userAuthState, userLoadingState } from "@/store/selectors/";
-import { BASE_URL } from "@/utils";
+import api from "@/utils";
 import axios from "axios";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { Grid, Button } from "@mui/material";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  Grid,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+} from "@mui/material";
 
 const Workspaces = () => {
   const router = useRouter();
-  const isAuthenticated = useRecoilValue(userLoadingState);
-  const isLoading = useRecoilValue(userAuthState);
+  const isAuthenticated = useRecoilValue(userAuthState);
+  const isLoading = useRecoilValue(userLoadingState);
   const [workspace, setWorkspace] = useRecoilState(userWorkspaces);
+  async function fetchWS() {
+    const res = await api.get(`/workspace`);
+    setWorkspace({
+      wsCreated: res.data.ws?.createdWorkspaces,
+      wsIn: res.data.ws?.participantInWS,
+      isLoading: false,
+    });
+  }
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
       router.push("/");
-      return;
+    } else {
+      fetchWS();
     }
-    async function fetchWS() {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`${BASE_URL}/workspace`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setWorkspace({
-        data: res.data.ws,
-        isLoading: false,
-      });
-    }
-    fetchWS();
-  }, [isLoading]);
-
-  const workspaceComponent = workspace.data.map((ws) => (
-    <WorkspaceCard
-      key={ws.id}
-      id={ws.id}
-      name={ws.name}
-      participants={ws.participants}
-    />
-  ));
+  }, [isAuthenticated, isLoading]);
 
   return (
     <div>
-      <CardHeader />
-      {workspace.isLoading ? (
-        <Loader />
-      ) : workspace.data.length === 0 ? (
-        <h3 style={{ textTransform: "uppercase", textAlign: "center" }}>
-          Create a workspace
-        </h3>
-      ) : (
-        workspaceComponent
-      )}
+      <Table stickyHeader>
+        <TableHead>
+          <TableRow>
+            <TableCell>CH. NO.</TableCell>
+            <TableCell>Channel Name</TableCell>
+            <TableCell align="right">Participants</TableCell>
+            <TableCell align="right">Manage</TableCell>
+          </TableRow>
+        </TableHead>
+        {workspace.isLoading ? (
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={4}>
+                <Loader />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        ) : workspace.wsCreated.length === 0 && workspace.wsIn.length === 0 ? (
+          <h3 style={{ textTransform: "uppercase", textAlign: "center" }}>
+            Create a workspace
+          </h3>
+        ) : (
+          <WorkspaceComponent />
+        )}
+      </Table>
     </div>
   );
 };
 
-const CardHeader = () => {
+const WorkspaceComponent = () => {
+  const workspace = useRecoilValue(userWorkspaces);
+  const wsCreated = workspace.wsCreated.map((ws, index) => (
+    <WorkspaceCard
+      owned={true}
+      key={ws.id}
+      id={ws.id}
+      name={ws.name}
+      participants={ws.participants}
+      index={index}
+    />
+  ));
+  const wsIn = workspace.wsIn.map((ws, index) => (
+    <WorkspaceCard
+      owned={false}
+      key={ws.id}
+      id={ws.id}
+      name={ws.name}
+      participants={ws.participants}
+      index={index}
+    />
+  ));
   return (
-    <Grid
-      container
-      sx={{
-        width: "100vw",
-        px: 5,
-        py: 2,
-        mb: 1,
-        backgroundColor: "#aaa",
-        alignItems: "center",
-        textTransform: "uppercase",
-      }}
-      columnGap={1}
-    >
-      <Grid item xs={4}>
-        <h3>Channel Name</h3>
-      </Grid>
-      <Grid item xs>
-        <h4>Participants</h4>
-      </Grid>
-      <Grid item xs={3} container gap={1}>
-        <h4>Manage</h4>
-      </Grid>
-    </Grid>
+    <TableBody>
+      {workspace.wsCreated.length && (
+        <TableRow>
+          <TableCell
+            colSpan={4}
+            height={80}
+            sx={{
+              fontWeight: "500",
+              textAlign: "center",
+              bgcolor: "#fbaaaa",
+              color: "white",
+              fontSize: "2rem",
+              textTransform: "uppercase",
+            }}
+          >
+            OWNER + Editor privileges
+          </TableCell>
+        </TableRow>
+      )}
+      {wsCreated}
+      {workspace.wsIn.length !== 0 && (
+        <TableRow>
+          <TableCell
+            colSpan={4}
+            height={80}
+            sx={{
+              fontWeight: "500",
+              textAlign: "center",
+              bgcolor: "#fbaaaa",
+              color: "white",
+              fontSize: "2rem",
+              textTransform: "uppercase",
+            }}
+          >
+            EDITOR Only privileges
+          </TableCell>
+        </TableRow>
+      )}
+      {wsIn}
+    </TableBody>
   );
 };
+
 export default Workspaces;

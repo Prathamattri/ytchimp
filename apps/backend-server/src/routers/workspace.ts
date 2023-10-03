@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import auth from "../middleware/auth";
-import uploadFile from "../utils/yt_auth";
+import uploadFile from "../utils/uploadToYT";
 import multer from "multer";
 
-const upload = multer({ dest: "../utils/videos" });
+const upload = multer({ dest: "./assets" });
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -16,22 +16,56 @@ const router = Router();
 
 router.get("/", auth, async (req: any, res: any) => {
   try {
-    let ws = await prisma.workspace.findMany({
+    // let ownedWS = await prisma.workspace.findMany({
+    //   where: {
+    //     creatorId: req.user,
+    //   },
+    //   select: {
+    //     id: true,
+    //     name: true,
+    //     expiresIn: true,
+    //     createdOn: true,
+    //     participants: {
+    //       select: {
+    //         id: true,
+    //       },
+    //     },
+    //   },
+    // });
+    let ws = await prisma.user.findUnique({
       where: {
-        creatorId: req.user,
+        id: req.user,
       },
       select: {
-        id: true,
-        name: true,
-        expiresIn: true,
-        createdOn: true,
-        participants: {
+        createdWorkspaces: {
           select: {
             id: true,
+            name: true,
+            expiresIn: true,
+            createdOn: true,
+            participants: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+        participantInWS: {
+          select: {
+            id: true,
+            name: true,
+            expiresIn: true,
+            createdOn: true,
+            participants: {
+              select: {
+                id: true,
+              },
+            },
           },
         },
       },
     });
+    // ws.push()
     if (!ws) {
       throw new Error("Workspace not found");
     }
@@ -186,22 +220,32 @@ router.put("/:workspaceId/remove", auth, async (req: any, res: any) => {
 //  @method  POST
 //  @route   /workspace/:workspaceId/upload
 //  @access  Private
-//  @desc    Authorize workspace to handle YT accounts
+//  @desc    Handle upload requests
 
 router.post(
   "/:workspaceId/upload",
-  [auth, upload.single("vidFile")],
+  [auth, upload.any()],
   async (req: any, res: any) => {
     try {
-      console.log(req);
-
-      res.send("hi");
-      // const data = await uploadFile(
-      //   "Test video 1",
-      //   "Test video description \nNew line here",
-      //   "",
-      //   req.params.workspaceId
-      // );
+      const ws = await prisma.workspace.findUnique({
+        where: {
+          id: req.params.workspaceId,
+        },
+        select: {
+          creatorId: true,
+        },
+      });
+      if (ws?.creatorId !== req.user) {
+        return res.json({ msg: "Sent request to the owner to upload" });
+      }
+      const data = await uploadFile(
+        req.body.title,
+        req.body.description,
+        `./assets/${req.files[0].filename}`, //video file
+        // `./assets/${req.files[1] ? req.files[1].filename : ""}`, // thumbnail
+        req.params.workspaceId
+      );
+      res.send(data);
     } catch (error) {
       console.error(error);
       res.status(500).send({ msg: "Server Error encountered" });
