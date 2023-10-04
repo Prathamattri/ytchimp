@@ -42,9 +42,9 @@ const Workspaces = () => {
       <Table stickyHeader>
         <TableHead>
           <TableRow>
-            <TableCell>CH. NO.</TableCell>
+            <TableCell>S. NO.</TableCell>
             <TableCell>Channel Name</TableCell>
-            <TableCell align="right">Participants</TableCell>
+            <TableCell align="right">Team Size</TableCell>
             <TableCell align="right">Manage</TableCell>
           </TableRow>
         </TableHead>
@@ -57,9 +57,15 @@ const Workspaces = () => {
             </TableRow>
           </TableBody>
         ) : workspace.wsCreated.length === 0 && workspace.wsIn.length === 0 ? (
-          <h3 style={{ textTransform: "uppercase", textAlign: "center" }}>
-            Create a workspace
-          </h3>
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={4}>
+                <h3 style={{ textTransform: "uppercase", textAlign: "center" }}>
+                  Create a workspace
+                </h3>
+              </TableCell>
+            </TableRow>
+          </TableBody>
         ) : (
           <WorkspaceComponent />
         )}

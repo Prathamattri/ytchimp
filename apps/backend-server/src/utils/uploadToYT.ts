@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import { authenticate } from "@google-cloud/local-auth";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "database";
 import path from "path";
 import fs from "fs";
 
@@ -58,7 +58,7 @@ async function uploadFile(
       body: fs.createReadStream(filename),
     },
   });
-  fs.rm(filename, (err) => {
+  fs.unlink(filename, (err) => {
     if (err) console.error(err);
   });
 
