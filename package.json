@@ -6,7 +6,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "start:server": "cd apps/backend-server && node dist/index.js",
-    "start:client": "cd apps/client && npm run start"  
+    "start:client": "cd apps/client && npx next start -p 3005"
   },
   "devDependencies": {
     "eslint": "^8.48.0",

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "database";
 import auth from "../middleware/auth";
 import uploadFile from "../utils/uploadToYT";
 import multer from "multer";

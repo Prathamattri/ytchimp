@@ -114,7 +114,6 @@ const Workspaces: React.FC = () => {
   async function handleLogout() {
     try {
       await api.post(`/user/logout`);
-      localStorage.removeItem("token");
       setUser({
         isAuthenticated: false,
         isLoading: false,
