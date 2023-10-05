@@ -10,7 +10,6 @@ COPY ["turbo.json","./turbo.json"]
 RUN npm install
 RUN npm install -g nodemon
 RUN cd /base/packages/database && npx prisma generate
-# RUN npm run start:server
 
 EXPOSE 3001
 WORKDIR /base/apps/backend-server
@@ -18,5 +17,3 @@ RUN npm run build
 COPY ["apps/backend-server/src/utils/oauth.json","./dist/oauth.json"]
 
 CMD ["nodemon","./dist/index.js"]
-
-# EXPOSE 3005
