@@ -9,11 +9,13 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { userState } from "@/store/atoms/user";
 import { useRouter } from "next/navigation";
 import { userAuthState } from "@/store/selectors/userAuth";
-import api from "@/utils";
+import { api } from "@/utils";
+import { alertUser } from "@/store/atoms/alert";
+import { v4 as uuidv4 } from "uuid";
 
 function Copyright(props: any) {
   return (
@@ -30,8 +32,9 @@ function Copyright(props: any) {
 
 export default function Login() {
   const router = useRouter();
-  const [user, setUser] = useRecoilState(userState);
   const isAuthenticated = useRecoilValue(userAuthState);
+  const setUser = useSetRecoilState(userState);
+  const setAlert = useSetRecoilState(alertUser);
 
   if (isAuthenticated) {
     router.push("/");
@@ -39,29 +42,46 @@ export default function Login() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-
-    const res = await api.post(`/user/login`, {
-      data: {
-        email: data.get("email"),
-        password: data.get("password"),
-      },
-    });
-    const resData = await res.data;
-    if (resData.type === "success") {
-      setUser({
-        userEmail: resData.user.email,
-        userName: resData.user.name,
-        isAuthenticated: true,
-        isLoading: false,
+    try {
+      const res = await api.post(`/user/login`, {
+        data: {
+          email: data.get("email"),
+          password: data.get("password"),
+        },
       });
-      router.push("/");
-    } else {
-      setUser({
-        userEmail: null,
-        userName: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      const resData = await res.data;
+      if (resData.type === "success") {
+        setAlert([
+          {
+            id: uuidv4(),
+            message: resData.msg,
+            type: resData.type,
+          },
+        ]);
+        setUser({
+          userEmail: resData.user.email,
+          userName: resData.user.name,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+        router.push("/");
+      } else {
+        setUser({
+          userEmail: null,
+          userName: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      }
+    } catch (error: any) {
+      setAlert((prevState) => [
+        ...prevState,
+        {
+          id: uuidv4(),
+          message: error.response.data.msg,
+          type: "error",
+        },
+      ]);
     }
   };
 

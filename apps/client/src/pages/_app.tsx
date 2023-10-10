@@ -5,8 +5,8 @@ import { RecoilRoot, useSetRecoilState } from "recoil";
 import { userState } from "@/store/atoms/user";
 import { useEffect } from "react";
 import Loader from "@/components/loader";
-import api from "@/utils";
-// import cookieCutter from "cookie-cutter";
+import { api } from "@/utils";
+import "dotenv/config";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (

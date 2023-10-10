@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import Loader from "./loader";
-import api from "@/utils";
+import { api } from "@/utils";
 
 const Navbar: React.FC = () => {
   const authenticated = useRecoilValue(userAuthState);

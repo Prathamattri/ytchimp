@@ -16,22 +16,6 @@ const router = Router();
 
 router.get("/", auth, async (req: any, res: any) => {
   try {
-    // let ownedWS = await prisma.workspace.findMany({
-    //   where: {
-    //     creatorId: req.user,
-    //   },
-    //   select: {
-    //     id: true,
-    //     name: true,
-    //     expiresIn: true,
-    //     createdOn: true,
-    //     participants: {
-    //       select: {
-    //         id: true,
-    //       },
-    //     },
-    //   },
-    // });
     let ws = await prisma.user.findUnique({
       where: {
         id: req.user,
@@ -65,7 +49,6 @@ router.get("/", auth, async (req: any, res: any) => {
         },
       },
     });
-    // ws.push()
     if (!ws) {
       throw new Error("Workspace not found");
     }
@@ -113,54 +96,30 @@ router.post("/new", auth, async (req: any, res: any) => {
   }
 });
 
-//  @method  POST
-//  @route   /workspace/:workspaceId/insert
+//  @method  GET
+//  @route   /workspace/:workspaceId/
 //  @access  Private
-//  @desc    Add workspace participants
-
-router.post("/:workspaceId/insert", auth, async (req: any, res: any) => {
+//  @desc    Get workspace data
+router.get("/:workspaceId", auth, async (req: any, res: any) => {
   try {
-    const userID = req.user.user;
-    const workspaceId = req.params.workspaceId;
-    const workspace = await prisma.workspace.findUnique({
+    const ws = await prisma.workspace.findUnique({
       where: {
-        id: workspaceId,
-      },
-    });
-    if (!workspace) {
-      throw new Error("Workspace not found");
-    }
-
-    if (workspace.creatorId !== userID)
-      return res.status(403).json({
-        msg: "User is not authorised for the action",
-        type: "FAILURE",
-      });
-    let usersToAdd = await prisma.user.findMany({
-      where: {
-        email: {
-          in: req.body.emails.split(" "),
-        },
+        id: req.params.workspaceId,
       },
       select: {
         id: true,
-      },
-    });
-
-    await prisma.workspace.update({
-      where: {
-        id: workspaceId,
-      },
-      data: {
+        name: true,
         participants: {
-          connect: usersToAdd,
+          select: {
+            email: true,
+          },
         },
+        createdOn: true,
+        expiresIn: true,
       },
     });
-    res.json({
-      msg: "Added new users to the workspace",
-      type: "SUCCESS",
-    });
+    if (!ws) return res.status(404).json({ msg: "Workspace not found" });
+    res.status(200).json({ ...ws, workspaceToken: null });
   } catch (error) {
     console.error(error);
     res.status(500).send({ msg: "Server Error encountered" });
@@ -169,44 +128,63 @@ router.post("/:workspaceId/insert", auth, async (req: any, res: any) => {
   }
 });
 
-//  @method  PUT
-//  @route   /workspace/:workspaceId/remove
+//  @method  POST
+//  @route   /workspace/:workspaceId/update
 //  @access  Private
-//  @desc    Remove participant from workspace
+//  @desc    Add workspace participants
 
-router.put("/:workspaceId/remove", auth, async (req: any, res: any) => {
+router.post("/:workspaceId/update", auth, async (req: any, res: any) => {
   try {
-    const userID = req.user.user;
+    const userID = req.user;
     const workspaceId = req.params.workspaceId;
     const workspace = await prisma.workspace.findUnique({
       where: {
         id: workspaceId,
       },
+      include: {
+        participants: true,
+      },
     });
     if (!workspace) {
       throw new Error("Workspace not found");
     }
+
     if (workspace.creatorId !== userID)
       return res.status(403).json({
         msg: "User is not authorised for the action",
         type: "FAILURE",
       });
-    const participantId = req.body.userId;
-    await prisma.workspace.update({
+    const { name, participants } = req.body;
+    let usersToAdd = await prisma.user.findMany({
       where: {
-        id: workspaceId,
-      },
-      data: {
-        participants: {
-          disconnect: {
-            id: participantId,
-          },
+        email: {
+          in: participants.split(" "),
         },
+      },
+      select: {
+        id: true,
       },
     });
 
-    res.status(200).json({
-      msg: "Removed the participant successfully",
+    const usersToRemove = workspace.participants.map((participant) => ({
+      id: participant.id,
+    }));
+    if (usersToAdd !== usersToRemove) {
+      await prisma.workspace.update({
+        where: {
+          id: workspaceId,
+        },
+        data: {
+          name: name,
+          participants: {
+            disconnect: usersToRemove,
+            connect: usersToAdd,
+          },
+        },
+      });
+    }
+    res.json({
+      msg: "Updated the workspace successfully",
       type: "SUCCESS",
     });
   } catch (error) {

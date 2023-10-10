@@ -8,3 +8,70 @@ a {
   text-decoration: none;
   color: rgb(25, 22, 22);
 }
+.notify-container {
+  position: fixed;
+  right: 0;
+  top: 25%;
+  width: 250px;
+}
+.app-notification {
+  position: absolute;
+  display: none;
+  width: 250px;
+  z-index: 100;
+  padding: 1rem;
+  padding-left: 2rem;
+  font-weight: bold;
+  transition: position 500ms ease-out;
+}
+.notify-container:hover .app-notification {
+  position: relative;
+}
+.app-notification.error {
+  display: block;
+  background: #f19f9fde;
+  animation:
+    movein 0.5s ease forwards,
+    moveout 0.5s 5s ease forwards;
+}
+.app-notification.success {
+  display: block;
+  background: #bcf19fde;
+  animation:
+    movein 0.5s ease forwards,
+    moveout 0.5s 5s ease forwards;
+}
+@keyframes movein {
+  from {
+    right: -250px;
+  }
+  to {
+    right: 0;
+  }
+}
+
+@keyframes moveout {
+  from {
+    right: 0;
+  }
+  to {
+    right: -250px;
+  }
+}
+
+.app-notification.success::before,
+.app-notification.error::before {
+  content: "";
+  width: 1rem;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.app-notification.success::before {
+  background: #64e91c;
+}
+.app-notification.error::before {
+  background: #ed0000;
+}
