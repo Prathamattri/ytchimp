@@ -9,7 +9,7 @@ import {
   TextareaAutosize,
   Typography,
 } from "@mui/material";
-import api, { api2 } from "@/utils";
+import { api, api2 } from "@/utils";
 import { useRecoilValue } from "recoil";
 import { userAuthState, userLoadingState } from "@/store/selectors";
 

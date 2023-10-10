@@ -13,7 +13,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import { userState } from "@/store/atoms/user";
 import { useRouter } from "next/navigation";
 import { userAuthState } from "@/store/selectors/userAuth";
-import api from "@/utils";
+import { api } from "@/utils";
 
 function Copyright(props: any) {
   return (

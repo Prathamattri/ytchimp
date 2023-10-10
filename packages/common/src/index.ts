@@ -13,6 +13,7 @@ export const WorkspaceObject = z.object({
   participants: z.array(
     z.object({
       id: z.string(),
+      email: z.string().optional(),
     })
   ),
 });

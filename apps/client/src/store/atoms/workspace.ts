@@ -30,5 +30,6 @@ export const userWorkspaces = atom({
       },
     ],
     isLoading: true,
+    update: 0,
   },
 });
