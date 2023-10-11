@@ -116,13 +116,49 @@ router.get("/:workspaceId", auth, async (req: any, res: any) => {
         },
         createdOn: true,
         expiresIn: true,
+        creatorId: true,
       },
     });
     if (!ws) return res.status(404).json({ msg: "Workspace not found" });
-    res.status(200).json({ ...ws, workspaceToken: null });
+    const owner = await prisma.user.findUnique({
+      where: {
+        id: ws.creatorId,
+      },
+    });
+
+    const isOwned = ws?.creatorId === req.user;
+
+    res.status(200).json({
+      ...ws,
+      workspaceToken: null,
+      owned: isOwned,
+      owner: owner?.name,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send({ msg: "Server Error encountered" });
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+//  @method  DELETE
+//  @route   /workspace/:workspaceId/
+//  @access  Private
+//  @desc    Delete the workspace
+
+router.delete("/:workspaceId", auth, async (req: any, res: any) => {
+  try {
+    await prisma.workspace.delete({
+      where: {
+        id: req.params.workspaceId,
+        creatorId: req.user,
+      },
+    });
+    res.status(200).json({ msg: "Deleted workspace successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server Error encountered" });
   } finally {
     await prisma.$disconnect();
   }

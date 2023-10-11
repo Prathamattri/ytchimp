@@ -1,10 +1,10 @@
 import "@/styles/globals.css";
+import "@/styles/customObject.css";
 import type { AppProps } from "next/app";
 import Layout from "@/components/Layout";
 import { RecoilRoot, useSetRecoilState } from "recoil";
 import { userState } from "@/store/atoms/user";
 import { useEffect } from "react";
-import Loader from "@/components/loader";
 import { api } from "@/utils";
 import "dotenv/config";
 

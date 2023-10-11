@@ -9,6 +9,7 @@ import {
   DialogContentText,
   TextField,
 } from "@mui/material";
+import { Info } from "@mui/icons-material";
 import { WorkspaceObjectTypes } from "common";
 import { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
@@ -50,21 +51,31 @@ const EditWorkspace = ({ id, owned }: { id: string; owned: boolean }) => {
     });
   }
   async function handleSubmit() {
-    const res = await api.post(`/workspace/${id}/update`, {
-      ...formData,
-    });
-    setWorkspaces((prevData) => ({
-      ...prevData,
-      update: prevData.update + 1,
-    }));
+    try {
+      const res = await api.post(`/workspace/${id}/update`, {
+        ...formData,
+      });
+      setWorkspaces((prevData) => ({
+        ...prevData,
+        update: prevData.update + 1,
+      }));
+      setAlert([
+        {
+          id: uuidv4(),
+          type: "success",
+          message: res.data.msg,
+        },
+      ]);
+    } catch (error: any) {
+      setAlert([
+        {
+          id: uuidv4(),
+          type: "error",
+          message: error.reponse.data.msg,
+        },
+      ]);
+    }
     setOpen(false);
-    setAlert([
-      {
-        id: uuidv4(),
-        type: "success",
-        message: res.data.msg,
-      },
-    ]);
   }
 
   async function handleUpdate(e: any) {
@@ -75,6 +86,37 @@ const EditWorkspace = ({ id, owned }: { id: string; owned: boolean }) => {
       ...prevData,
       [name]: value,
     }));
+  }
+  async function handleDelete() {
+    try {
+      const proceed = confirm("Are you sure you want to delete the workspace?");
+      if (proceed) {
+        const res = await api.delete(`/workspace/${id}`);
+        setAlert([
+          {
+            id: uuidv4(),
+            type: "success",
+            message: res.data.msg,
+          },
+        ]);
+
+        setWorkspaces((prevData) => ({
+          ...prevData,
+          update: prevData.update + 1,
+        }));
+      }
+    } catch (error: any) {
+      console.log(error);
+
+      setAlert([
+        {
+          id: uuidv4(),
+          type: "error",
+          message: error.reponse.data.msg,
+        },
+      ]);
+    }
+    setOpen(false);
   }
 
   useEffect(() => {
@@ -115,14 +157,34 @@ const EditWorkspace = ({ id, owned }: { id: string; owned: boolean }) => {
             autoFocus
             margin="dense"
             id="wsParticipants"
-            label="Workspace Participants"
+            label={
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
+              >
+                Workspace Pariticipants
+                <Info sx={{ fontSize: "1rem" }} />
+              </div>
+            }
             type="text"
             fullWidth
             variant="standard"
             name="participants"
+            title="Add emails of editors seperated by spaces"
             value={formData.participants}
             onChange={handleUpdate}
           />
+          <Button
+            variant="contained"
+            color="error"
+            sx={{ marginTop: "2rem" }}
+            onClick={handleDelete}
+          >
+            Delete Workspace
+          </Button>
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={handleClose}>

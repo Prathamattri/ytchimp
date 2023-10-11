@@ -3,7 +3,6 @@ import React from "react";
 import { Button, Grid, TableRow, TableCell } from "@mui/material";
 import Link from "next/link";
 import EditWorkspace from "./editWorkspace";
-
 interface cardProps
   extends Pick<WorkspaceObjectTypes, "name" | "participants" | "id"> {
   index: number;

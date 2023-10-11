@@ -2,22 +2,22 @@ import { alertUser } from "@/store/atoms/alert";
 import React from "react";
 import { useRecoilValue } from "recoil";
 
-const Notify = () => {
+const Alert = () => {
   const alerts = useRecoilValue(alertUser);
 
   const alertArr = alerts.map((elem) => {
-    return <Message key={elem.id} type={elem.type} message={elem.message} />;
+    return (
+      <li key={elem.id} className={`app-alert ${elem.type}`}>
+        {elem.message}
+      </li>
+    );
   });
 
   return (
-    <div className="notify-container">
+    <div className="alert-container">
       <ul>{alertArr}</ul>
     </div>
   );
 };
 
-const Message = ({ type, message }: { type: string; message: string }) => {
-  return <li className={`app-notification ${type}`}>{message}</li>;
-};
-
-export default Notify;
+export default Alert;

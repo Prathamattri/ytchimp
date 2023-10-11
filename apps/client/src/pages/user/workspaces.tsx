@@ -44,7 +44,9 @@ const Workspaces = () => {
 
   return (
     <div>
-      <NewWorkspace fetchWS={fetchWS} />
+      {(workspace.wsCreated.length !== 0 || workspace.wsIn.length !== 0) && (
+        <NewWorkspace fetchWS={fetchWS} />
+      )}
       <Table>
         <TableHead>
           <TableRow>
@@ -102,44 +104,43 @@ const WorkspaceComponent = () => {
   ));
   return (
     <TableBody>
-      {workspace.wsCreated.length !== 0 && (
-        <TableRow>
-          <TableCell
-            colSpan={4}
-            height={80}
-            sx={{
-              fontWeight: "500",
-              textAlign: "center",
-              bgcolor: "#fbaaaa",
-              color: "white",
-              fontSize: "2rem",
-              textTransform: "uppercase",
-            }}
-          >
-            OWNER + Editor privileges
-          </TableCell>
-        </TableRow>
-      )}
-      {wsCreated}
-      {workspace.wsIn.length !== 0 && (
-        <TableRow>
-          <TableCell
-            colSpan={4}
-            height={80}
-            sx={{
-              fontWeight: "500",
-              textAlign: "center",
-              bgcolor: "#fbaaaa",
-              color: "white",
-              fontSize: "2rem",
-              textTransform: "uppercase",
-            }}
-          >
-            EDITOR Only privileges
-          </TableCell>
-        </TableRow>
-      )}
-      {wsIn}
+      {workspace.wsCreated.length !== 0 &&
+        // <TableRow>
+        //   <TableCell
+        //     colSpan={4}
+        //     height={80}
+        //     sx={{
+        //       fontWeight: "500",
+        //       textAlign: "center",
+        //       bgcolor: "#fbaaaa",
+        //       color: "white",
+        //       fontSize: "2rem",
+        //       textTransform: "uppercase",
+        //     }}
+        //   >
+        //     OWNER + Editor privileges
+        //   </TableCell>
+        // </TableRow>
+        wsCreated}
+      {/* {wsCreated} */}
+      {workspace.wsIn.length !== 0 &&
+        // <TableRow>
+        //   <TableCell
+        //     colSpan={4}
+        //     height={80}
+        //     sx={{
+        //       fontWeight: "500",
+        //       textAlign: "center",
+        //       bgcolor: "#fbaaaa",
+        //       color: "white",
+        //       fontSize: "2rem",
+        //       textTransform: "uppercase",
+        //     }}
+        //   >
+        //     EDITOR Only privileges
+        //   </TableCell>
+        // </TableRow>
+        wsIn}
     </TableBody>
   );
 };

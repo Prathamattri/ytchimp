@@ -3,8 +3,6 @@ import { userState } from "@/store/atoms/user";
 import Loader from "@/components/loader";
 import Image from "next/image";
 import { Box, Typography } from "@mui/material";
-import { AuthButtons } from "@/components/navbar";
-
 export default function Home() {
   const user = useRecoilValue(userState);
   return (
@@ -13,7 +11,10 @@ export default function Home() {
         {user.isLoading ? (
           <Loader />
         ) : user.isAuthenticated ? (
-          <h4>Welcome {user.userEmail}</h4>
+          <Typography variant="h2">
+            Welcome,
+            <br /> <span style={{ fontWeight: "400" }}>{user.userName}</span>
+          </Typography>
         ) : (
           <Landing />
         )}

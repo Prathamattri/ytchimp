@@ -1,14 +1,14 @@
 import React from "react";
 import Navbar from "./navbar";
 import { Inter } from "next/font/google";
-import Notify from "./alert";
+import Alert from "./alert";
 
 const inter = Inter({ subsets: ["latin"] });
 const Layout = ({ children }) => {
   return (
     <div className={inter.className}>
       <Navbar />
-      <Notify />
+      <Alert />
       <main>{children}</main>
     </div>
   );

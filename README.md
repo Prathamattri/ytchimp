@@ -25,10 +25,10 @@ The server will be running on PORT 3001
 
   - To create new database schema do the following:
 
-    ```bash
-    docker exec -it ytchimp_server bash
-    cd /base/packages/database && npx prisma migrate dev -- init
-    exit
-    ```
+```bash
+docker exec -it ytchimp_server bash
+cd /base/packages/database && npx prisma migrate dev -- init
+exit
+```
 
 > **NOTE:** Run the frontend on port 3005 for now, due to CORS policy in the backend set for _localhost:3005 only_
