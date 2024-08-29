@@ -1,10 +1,8 @@
 import { Router } from "express";
 import { PrismaClient } from "database";
 import auth from "../middleware/auth";
-import uploadFile from "../utils/uploadToYT";
-import multer from "multer";
+import { uploadMultipartToS3, upload } from "../utils/uploadUtility";
 
-const upload = multer({ dest: "./assets" });
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -196,13 +194,25 @@ router.post("/:workspaceId/update", auth, async (req: any, res: any) => {
 });
 
 //  @method  POST
-//  @route   /workspace/:workspaceId/upload
+//  @route   /workspace/:workspaceId/upload/server
+//  @access  Private
+//  @desc    Handle upload requests
+
+router.post("/:workspaceId/upload/metadata", [auth], async (req: any, res: any) => {
+  try {
+  } catch (error) {
+
+  }
+})
+
+//  @method  POST
+//  @route   /workspace/:workspaceId/upload/video
 //  @access  Private
 //  @desc    Handle upload requests
 
 router.post(
-  "/:workspaceId/upload",
-  [auth, upload.any()],
+  "/:workspaceId/upload/video",
+  [auth, upload.array("vidFile", 10000)],
   async (req: any, res: any) => {
     try {
       const ws = await prisma.workspace.findUnique({
@@ -216,14 +226,25 @@ router.post(
       if (ws?.creatorId !== req.user) {
         return res.json({ msg: "Sent request to the owner to upload" });
       }
-      const data = await uploadFile(
-        req.body.title,
-        req.body.description,
-        `./assets/${req.files[0].filename}`, //video file
-        // `./assets/${req.files[1] ? req.files[1].filename : ""}`, // thumbnail
-        req.params.workspaceId
+      // console.log("-----------REQUEST RECIEVED-------------");
+      // console.log(req.body.part_number);
+      // res.status(200).json({ message: "RECIEVED FILES IN MULTIPLE PARTS" });
+
+      console.log({
+        uploadFileKey: req.params.workspaceId,
+        uploadId: req.body.uploadId || "",
+        bucket: process.env.AWS_S3_BUCKET || "",
+        partNumber: req.body.part_number,
+      })
+      const data = await uploadMultipartToS3({
+        uploadFileKey: req.params.workspaceId,
+        uploadId: req.body.uploadId || "",
+        bucket: process.env.AWS_S3_BUCKET || "",
+        partNumber: parseInt(req.body.part_number),
+      },
+        parseInt(req.body.total_parts)
       );
-      res.send(data);
+      res.status(200).json(data);
     } catch (error) {
       console.error(error);
       res.status(500).send({ msg: "Server Error encountered" });
@@ -233,4 +254,21 @@ router.post(
   }
 );
 
+//  @method  POST
+//  @route   /workspace/:workspaceId/upload/youtube
+//  @access  Private
+//  @desc    Handle upload to youtube
+
+router.post("/:workspaceId/upload/youtube", async (req, res) => {
+  const workspaceId = req.params.workspaceId;
+  try {
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ msg: "Server Error encountered" });
+  } finally {
+    await prisma.$disconnect();
+  }
+  res.status(200);
+})
 export default router;

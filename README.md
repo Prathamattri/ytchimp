@@ -1,4 +1,4 @@
-# YTCHIMP
+# SYM (Simple Youtube Manager)
 
 Manage your YouTube team access without any tensions
 

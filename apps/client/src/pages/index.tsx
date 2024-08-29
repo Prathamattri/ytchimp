@@ -1,9 +1,8 @@
 import { useRecoilValue } from "recoil";
 import { userState } from "@/store/atoms/user";
 import Loader from "@/components/loader";
-import Image from "next/image";
 import { Box, Typography } from "@mui/material";
-import { AuthButtons } from "@/components/navbar";
+import Image from "next/image";
 
 export default function Home() {
   const user = useRecoilValue(userState);
@@ -27,61 +26,71 @@ function Landing() {
     <>
       <Box
         sx={{
-          // display: "flex",
           height: "calc(100% - 5rem)",
           width: "100%",
           padding: { md: " 0 1rem 1rem", xs: " 0 5px 5px" },
-          justifyContent: "space-around",
+          display: "grid",
+          gridTemplateAreas: `
+              " landerImg . "
+              " landerImg heading1 "
+              " landerImg heading2 "
+              " landerImg . "
+            `,
+          rowGap: "1rem"
         }}
       >
-        <Typography
-          variant="h2"
-          fontWeight={"bold"}
-          textAlign={"right"}
-          maxWidth={"40rem"}
-          sx={{
-            position: "absolute",
-            right: "1rem",
-          }}
-        >
-          WORRIED ABOUT YOUR{" "}
-          <span style={{ color: "rgb(245 118 118)" }}>YouTube</span> CHANNEL?
-        </Typography>
         <Box
           sx={{
-            position: "absolute",
-            top: "55%",
+            gridArea: "heading1",
+          }}
+        >
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: "bold",
+              textAlign: "right",
+              maxWidth: "40rem",
+              display: "block",
+            }}
+          >
+            WORRIED ABOUT YOUR
+            <span style={{ color: "rgb(245 118 118)" }}> YouTube</span> CHANNEL?
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            gridArea: "heading2",
           }}
         >
           <Typography
             variant="h5"
-            color={"#635f5f"}
-            textTransform={"uppercase"}
-            fontWeight={"bold"}
-            textAlign={"left"}
+            sx={{
+              color: "#635f5f",
+              textAlign: "right",
+              textTransform: "uppercase",
+              fontWeight: "bold",
+            }}
           >
             Manage your uploads with us
           </Typography>
-          {/* <AuthButtons /> */}
         </Box>
-        {/* <Box
+        <Box
           sx={{
-            display: { xs: "flex" },
-            alignItems: "center",
-            justifyContent: "center",
+            gridArea: "landerImg",
+            aspectRatio: "3/4",
+            width: "30rem",
+            position: "relative"
           }}
         >
-          <Box
-            component={"img"}
+          <Image
             alt="Landing Image"
+            fill
             src={"/landing.webp"}
-            sx={{
-              height: { xs: "50%", sm: "80%", md: "100%" },
-              position: "relative",
-              right: 0,
+            style={{
+              objectFit: "contain"
             }}
           />
-        </Box> */}
+        </Box>
       </Box>
     </>
   );

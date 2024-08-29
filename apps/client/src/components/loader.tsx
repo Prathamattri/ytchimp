@@ -1,9 +1,10 @@
 import React from "react";
-import { Typography, Box } from "@mui/material";
-import Image from "next/image";
+import { Skeleton } from "@mui/material";
 
 const Loader = () => {
-  return <Typography>Loading...</Typography>;
+  return (
+    <Skeleton width={200} height={60}></Skeleton>
+  );
 };
 
 export default Loader;

@@ -5,15 +5,16 @@ import cookieParser from "cookie-parser";
 import "dotenv/config";
 import cors from "cors";
 const app = express();
-const PORT = 3001 || process.env.PORT;
+const PORT = process.env.PORT || 5001;
+const FrontEndURL = process.env.frontEndURL || "http://localhost:3005/";
 
 app.use(express.json());
-app.use(cors({ credentials: true, origin: process.env.frontEndURL }));
+app.use(cors({ credentials: true, origin: FrontEndURL }));
 app.use(cookieParser());
 app.use("/user", userRouter);
 app.use("/workspace", workspaceRouter);
 
-app.get("/", (req: any, res: any) => {
+app.get("/", (_: any, res: any) => {
   res.status(200).json({ msg: "YT chimp api!" });
 });
 
