@@ -2,8 +2,7 @@ import { google } from "googleapis";
 import { authenticate } from "@google-cloud/local-auth";
 import { PrismaClient } from "database";
 import { InitiateMultipartUploadType, S3UploadObjectType } from "../types";
-import { CompletedPart, CompleteMultipartUploadCommand, CreateMultipartUploadCommand, S3Client, UploadPartCommand } from "@aws-sdk/client-s3"
-// import fs from "node:fs/promises"
+import { CompletedPart, CompleteMultipartUploadCommand, CompleteMultipartUploadCommandInput, CreateMultipartUploadCommand, S3Client, UploadPartCommand, UploadPartCommandInput } from "@aws-sdk/client-s3"
 import fs from "node:fs"
 import multer from "multer";
 
@@ -47,13 +46,6 @@ export const upload = multer({
         cb(null, `${req.url.split("/")[1]}_${file.originalname}`);
       },
     }),
-  fileFilter: function(req, file, cb) {
-    const partNumber = file.originalname;
-    if (partNumber == req.headers["part-to-process"])
-      cb(null, true);
-    else
-      cb(null, false);
-  },
   limits: {
     fileSize: 11 * 1024 * 1024,
   }
@@ -88,23 +80,26 @@ async function initiateUploadToS3<InputType extends Omit<InitiateMultipartUpload
   }
 }
 
-let partsArray: CompletedPart[] = []
+let completedPartsMap: Map<string, CompletedPart[]> = new Map();
+
 
 export async function uploadMultipartToS3({ bucket, uploadFileKey, partNumber, uploadId = "" }: S3UploadObjectType, totalParts: number) {
   let uploadInitiationResponse: InitiateMultipartUploadType;
   if (uploadId == "") {
+    completedPartsMap.set(uploadFileKey, [])
+
     uploadInitiationResponse = await initiateUploadToS3({ bucket, uploadFileKey })
     if (uploadInitiationResponse.responseType == "error") {
       throw new Error("Problem Initiating multipart upload to S3 bucket")
     }
     uploadId = uploadInitiationResponse.uploadId;
   }
-  const input = {
+  const input: UploadPartCommandInput = {
     "Body": fs.createReadStream(`${__dirname}/uploadFile/${uploadFileKey}_${partNumber}`),
     "Bucket": bucket,
     "Key": uploadFileKey,
     "PartNumber": partNumber,
-    "UploadId": uploadId
+    "UploadId": uploadId,
   };
   const uploadMultipartCommand = new UploadPartCommand(input);
   try {
@@ -112,25 +107,23 @@ export async function uploadMultipartToS3({ bucket, uploadFileKey, partNumber, u
     console.log("Uploaded part ", partNumber)
     console.log(response.ETag)
 
-    partsArray.push({
+    const copyArray = completedPartsMap.get(uploadFileKey) as CompletedPart[]
+    copyArray.push({
       "PartNumber": partNumber,
       "ETag": response.ETag
     })
+    completedPartsMap.set(uploadFileKey, copyArray);
   } catch (error) {
     console.log(error);
   }
-  console.log(`${partNumber}/${totalParts}`)
-  console.log(partNumber, " : ", typeof partNumber)
-  console.log(totalParts, " : ", typeof totalParts)
-  console.log(JSON.stringify(partsArray))
   if (partNumber == totalParts) {
-    const input = {
+    const input: CompleteMultipartUploadCommandInput = {
       "Bucket": bucket,
       "Key": uploadFileKey,
       "UploadId": uploadId,
       "MultipartUpload": {
-        "Parts": partsArray
-      }
+        "Parts": completedPartsMap.get(uploadFileKey)
+      },
     }
     console.log("completeMultipartUploadCommand initiated")
 
@@ -138,6 +131,16 @@ export async function uploadMultipartToS3({ bucket, uploadFileKey, partNumber, u
       const completeMultipartUploadCommand = new CompleteMultipartUploadCommand(input);
       const response = await s3.send(completeMultipartUploadCommand);
       console.log({ msg: "completed upload", exp: response.Expiration })
+
+      // cleaning up server storage
+      fs.readdir(__dirname + "/uploadFile", (error, files) => {
+        if (error) throw error;
+        const regex = new RegExp(`${uploadFileKey}`)
+        files
+          .filter(name => regex.test(name))
+          .forEach(file => fs.unlinkSync(__dirname + "/uploadFile/" + file))
+      })
+
     } catch (error) {
       console.log(error)
       throw error
