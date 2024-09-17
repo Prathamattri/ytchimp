@@ -31,43 +31,20 @@ model Workspace {
   workspaceToken String?
   expiresIn      DateTime?
   createdOn      DateTime  @default(now())
+  upload         Uploads[] @relation("Upload")
 
   @@map("workspaces")
 }
 
-// model User {
-//   id                Int             @id @default(autoincrement())
-//   name              String?
-//   email             String
-//   password          String
-//   gravatar          String?
-//   createdWorkspaces Workspace[]     @relation("WorkspaceOwner")
-//   participantInWS   Workspace[]     @relation("WorkspaceParticipants")
-//   userWorkspaces    UserWorkspace[]
-
-//   @@map(name: "users")
-// }
-
-// model Workspace {
-//   id             Int             @id @default(autoincrement())
-//   ownerId        Int
-//   owner          User            @relation("WorkspaceOwner", fields: [ownerId], references: [id])
-//   participants   User[]          @relation("WorkspaceParticipants")
-//   workspaceName  String?
-//   workspaceToken String?
-//   expiresIn      Int?
-//   userWorkspaces UserWorkspace[]
-
-//   @@map(name: "workspaces")
-// }
-
-// model UserWorkspace {
-//   userId      Int
-//   workspaceId Int
-
-//   user      User      @relation(fields: [userId], references: [id])
-//   workspace Workspace @relation(fields: [workspaceId], references: [id])
-
-//   @@id([userId, workspaceId])
-//   @@map(name: "user_workspace")
-// }
+model Uploads {
+  id               String    @id @default(uuid())
+  videoTitle       String
+  videoDescription String
+  tags             String
+  defaultLanguage  String?
+  privacyStatus    String
+  uploadPending    Boolean   @default(true)
+  workspace        Workspace @relation("Upload", fields: [workspaceId], references: [id])
+  workspaceId      String
+  initiatedOn      DateTime  @default(now())
+}

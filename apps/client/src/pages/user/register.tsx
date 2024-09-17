@@ -14,19 +14,7 @@ import { userState } from "@/store/atoms/user";
 import { useRouter } from "next/navigation";
 import { userAuthState } from "@/store/selectors/userAuth";
 import { api } from "@/utils";
-
-function Copyright(props: any) {
-  return (
-    <Typography variant="body2" align="center" {...props}>
-      {"Copyright © "}
-      <Link color="inherit" href="https://mui.com/">
-        YTCHIMP
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
-    </Typography>
-  );
-}
+import { Copyright } from "./login";
 
 export default function Login() {
   const router = useRouter();
@@ -84,7 +72,7 @@ export default function Login() {
           sx={{
             m: 1,
             bgcolor: "transparent",
-            color: "black",
+            color: "white",
           }}
         >
           <LockOutlinedIcon fontSize="large" />

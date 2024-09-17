@@ -1,8 +1,12 @@
 import { Router } from "express";
 import { PrismaClient } from "database";
 import auth from "../middleware/auth";
-import { uploadMultipartToS3, upload } from "../utils/uploadUtility";
-
+import {
+  uploadMultipartToS3,
+  upload,
+  uploadToYoutube,
+} from "../utils/uploadUtility";
+import { type } from "node:os";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -54,7 +58,7 @@ router.get("/", auth, async (req: any, res: any) => {
     res.status(200).json({ ws });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ msg: "Server Error encountered" });
+    res.status(500).send({ type: "error", msg: "Server Error encountered" });
   } finally {
     await prisma.$disconnect();
   }
@@ -88,7 +92,7 @@ router.post("/new", auth, async (req: any, res: any) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ msg: "Server Error encountered" });
+    res.status(500).send({ type: "error", msg: "Server Error encountered" });
   } finally {
     await prisma.$disconnect();
   }
@@ -120,7 +124,7 @@ router.get("/:workspaceId", auth, async (req: any, res: any) => {
     res.status(200).json({ ...ws, workspaceToken: null });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ msg: "Server Error encountered" });
+    res.status(500).send({ type: "error", msg: "Server Error encountered" });
   } finally {
     await prisma.$disconnect();
   }
@@ -187,23 +191,71 @@ router.post("/:workspaceId/update", auth, async (req: any, res: any) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ msg: "Server Error encountered" });
+    res.status(500).send({ type: "error", msg: "Server Error encountered" });
   } finally {
     await prisma.$disconnect();
   }
 });
+
+//  @method  DELETE
+//  @route   /workspace/:workspaceId
+//  @access  Private
+//  @desc    Handle delete workspace request
+
+router.delete("/:workspaceId", [auth], async (req: any, res: any) => {
+
+  try {
+    const ws = await prisma.workspace.findUnique({
+      where: {
+        id: req.params.workspaceId
+      },
+      select: {
+        creatorId: true
+      }
+    })
+    if (!ws) {
+      return res.status(404).json({ type: "error", msg: "Workspace with given id not found!" })
+    }
+    if (req.user != ws?.creatorId) {
+      return res.status(401).json({ type: "error", msg: "You are not authorised to prune this workspace." })
+    }
+    await prisma.uploads.deleteMany({
+      where: {
+        workspaceId: req.params.workspaceId
+      }
+    })
+
+    await prisma.workspace.delete({
+      where: {
+        id: req.params.workspaceId
+      }
+    })
+    res.status(200).json({ type: "success", msg: "Successfully deleted the workspace" })
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ type: "error", msg: "Server Error encountered" });
+  } finally {
+    await prisma.$disconnect();
+  }
+
+})
 
 //  @method  POST
 //  @route   /workspace/:workspaceId/upload/server
 //  @access  Private
 //  @desc    Handle upload requests
 
-router.post("/:workspaceId/upload/metadata", [auth], async (req: any, res: any) => {
-  try {
-  } catch (error) {
-
-  }
-})
+router.post(
+  "/:workspaceId/upload/metadata",
+  [auth],
+  async (req: any, res: any) => {
+    try {
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ type: "error", msg: "Server Error encountered" });
+    }
+  },
+);
 
 //  @method  POST
 //  @route   /workspace/:workspaceId/upload/video
@@ -226,32 +278,30 @@ router.post(
       if (ws?.creatorId !== req.user) {
         return res.json({ msg: "Sent request to the owner to upload" });
       }
-      // console.log("-----------REQUEST RECIEVED-------------");
-      // console.log(req.body.part_number);
-      // res.status(200).json({ message: "RECIEVED FILES IN MULTIPLE PARTS" });
 
       console.log({
         uploadFileKey: req.params.workspaceId,
         uploadId: req.body.uploadId || "",
         bucket: process.env.AWS_S3_BUCKET || "",
         partNumber: req.body.part_number,
-      })
-      const data = await uploadMultipartToS3({
-        uploadFileKey: req.params.workspaceId,
-        uploadId: req.body.uploadId || "",
-        bucket: process.env.AWS_S3_BUCKET || "",
-        partNumber: parseInt(req.body.part_number),
-      },
-        parseInt(req.body.total_parts)
+      });
+      const data = await uploadMultipartToS3(
+        {
+          uploadFileKey: req.params.workspaceId,
+          uploadId: req.body.uploadId || "",
+          bucket: process.env.AWS_S3_BUCKET || "",
+          partNumber: parseInt(req.body.part_number),
+        },
+        parseInt(req.body.total_parts),
       );
       res.status(200).json(data);
     } catch (error) {
       console.error(error);
-      res.status(500).send({ msg: "Server Error encountered" });
+      res.status(500).send({ type: "error", msg: "Server Error encountered" });
     } finally {
       await prisma.$disconnect();
     }
-  }
+  },
 );
 
 //  @method  POST
@@ -262,13 +312,28 @@ router.post(
 router.post("/:workspaceId/upload/youtube", async (req, res) => {
   const workspaceId = req.params.workspaceId;
   try {
-
+    const response = await uploadToYoutube(
+      "TITLE",
+      "DESCRIPTION",
+      workspaceId,
+      "someid",
+      process.env.AWS_S3_BUCKET || "",
+    );
+    if (null != response.error) throw response.error;
+    res
+      .status(200)
+      .json({ type: "success", msg: "Uploaded to youtube successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ msg: "Server Error encountered" });
+    res
+      .status(500)
+      .send({
+        type: "error",
+        msg: "Server Error encountered while uploading the video",
+      });
   } finally {
     await prisma.$disconnect();
   }
   res.status(200);
-})
+});
 export default router;

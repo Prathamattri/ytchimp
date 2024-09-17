@@ -1,15 +1,15 @@
 import React from "react";
 import Navbar from "./navbar";
-import { Inter } from "next/font/google";
 import Notify from "./alert";
+import { Poppins } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"] });
+const poppinsFont = Poppins({ weight: ["100", "200", "300", "400", "500", "600", "700"], subsets: ["latin"] })
 const Layout = ({ children }) => {
   return (
-    <div className={inter.className}>
+    <div className={poppinsFont.className}>
       <Navbar />
-      <Notify />
       <main>{children}</main>
+      <Notify />
     </div>
   );
 };

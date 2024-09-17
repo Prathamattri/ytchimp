@@ -1,97 +1,61 @@
 import { useRecoilValue } from "recoil";
-import { userState } from "@/store/atoms/user";
+import { UserStateType, userState } from "@/store/atoms/user";
 import Loader from "@/components/loader";
-import { Box, Typography } from "@mui/material";
-import Image from "next/image";
+import { Box, Button, Typography } from "@mui/material";
+import { useRef } from "react";
+import { BackgroundCanvas } from "@/utils/CanvasBackground";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const user = useRecoilValue(userState);
   return (
     <>
-      <section>
-        {user.isLoading ? (
-          <Loader />
-        ) : user.isAuthenticated ? (
-          <h4>Welcome {user.userEmail}</h4>
-        ) : (
-          <Landing />
-        )}
-      </section>
+      <section>{user.isLoading ? <Loader /> : <Landing user={user} />}</section>
     </>
   );
 }
 
-function Landing() {
+function Landing({ user }: { user: UserStateType }) {
+  const router = useRouter();
   return (
-    <>
-      <Box
-        sx={{
-          height: "calc(100% - 5rem)",
-          width: "100%",
-          padding: { md: " 0 1rem 1rem", xs: " 0 5px 5px" },
-          display: "grid",
-          gridTemplateAreas: `
-              " landerImg . "
-              " landerImg heading1 "
-              " landerImg heading2 "
-              " landerImg . "
-            `,
-          rowGap: "1rem"
-        }}
-      >
-        <Box
-          sx={{
-            gridArea: "heading1",
-          }}
-        >
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: "bold",
-              textAlign: "right",
-              maxWidth: "40rem",
-              display: "block",
-            }}
-          >
-            WORRIED ABOUT YOUR
-            <span style={{ color: "rgb(245 118 118)" }}> YouTube</span> CHANNEL?
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            gridArea: "heading2",
-          }}
-        >
-          <Typography
-            variant="h5"
-            sx={{
-              color: "#635f5f",
-              textAlign: "right",
-              textTransform: "uppercase",
-              fontWeight: "bold",
-            }}
-          >
-            Manage your uploads with us
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            gridArea: "landerImg",
-            aspectRatio: "3/4",
-            width: "30rem",
-            position: "relative"
-          }}
-        >
-          <Image
-            alt="Landing Image"
-            fill
-            src={"/landing.webp"}
-            style={{
-              objectFit: "contain"
-            }}
-          />
-        </Box>
-      </Box>
-    </>
+    <main style={{}}>
+      <BackgroundCanvas />
+      <div className="center-grid-container landing-container ">
+        <div className="center-grid-container">
+          <div>
+            <Typography
+              variant="h1"
+              sx={{
+                fontWeight: 700,
+                "@media (min-width: 1200px)": {
+                  fontSize: "6rem",
+                },
+              }}
+            >
+              SIMPLE YOUTUBE MANAGER
+            </Typography>
+          </div>
+          <div>
+            <Typography variant="h2" sx={{}}>
+              MANAGE YOUR <span className="youtube">YouTube</span> UPLOADS WITH
+              US
+            </Typography>
+          </div>
+          {user.isAuthenticated ? (
+            <div>
+              <button onClick={() => router.push("/user/workspaces")}>
+                Workspaces
+              </button>
+            </div>
+          ) : (
+            <div>
+              <button onClick={() => router.push("/user/register")}>
+                Get Started
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
   );
 }

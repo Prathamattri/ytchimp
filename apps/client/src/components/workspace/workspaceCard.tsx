@@ -17,13 +17,13 @@ const WorkspaceCard = (props: cardProps) => {
       <TableCell>{props.name}</TableCell>
       <TableCell align="right">{props.participants.length + 1}</TableCell>
       <TableCell>
-        <Grid item container gap={1} sx={{ flexDirection: "row-reverse" }}>
+        <Grid item container gap={1} sx={{ flexDirection: "row-reverse", alignItems: "center" }}>
           <Grid item>
             <EditWorkspace id={props.id} owned={props.owned} />
           </Grid>
           <Grid item>
-            <Link href={`/user/workspace/${props.id}`}>
-              <Button variant="contained">Use</Button>
+            <Link href={`/workspace/${props.id}?wsname=${props.name}`}>
+              <Button variant="contained">Upload</Button>
             </Link>
           </Grid>
         </Grid>

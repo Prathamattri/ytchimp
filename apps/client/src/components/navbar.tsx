@@ -30,12 +30,12 @@ const Navbar: React.FC = () => {
             }}
           >
             <YouTubeIcon
-              color="error"
               sx={{
                 fontSize: "2rem",
                 display: { xs: "none", md: "flex" },
                 mr: 1,
               }}
+              color="error"
             />
             <Typography
               variant="h6"
@@ -46,11 +46,10 @@ const Navbar: React.FC = () => {
                 fontFamily: "monospace",
                 fontWeight: 700,
                 letterSpacing: ".3rem",
-                color: "inherit",
                 textDecoration: "none",
               }}
             >
-              YTCHIMP
+              SYM
             </Typography>
             <YouTubeIcon
               color="error"
@@ -73,7 +72,7 @@ const Navbar: React.FC = () => {
                 textDecoration: "none",
               }}
             >
-              YTCHIMP
+              SYM
             </Typography>
           </Box>
         </Link>
@@ -99,10 +98,19 @@ export const AuthButtons: React.FC = () => {
       }}
     >
       <Link href={"/user/login"}>
-        <Button variant="text">Login</Button>
+        <Button
+          variant="text"
+          color="error"
+          sx={{ fontWeight: "bold" }}
+          size="large"
+        >
+          Login
+        </Button>
       </Link>
       <Link href={"/user/register"}>
-        <Button variant="contained">Register</Button>
+        <Button variant="contained" color="error" size="large">
+          Register
+        </Button>
       </Link>
     </Box>
   );

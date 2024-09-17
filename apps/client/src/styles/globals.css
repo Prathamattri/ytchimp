@@ -1,77 +1,204 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer reset;
+
+@layer reset {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  a,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  button,
+  p,
+  span {
+    color: white;
+  }
 }
 
-a {
-  text-decoration: none;
-  color: rgb(25, 22, 22);
-}
-.notify-container {
-  position: fixed;
-  right: 0;
-  top: 25%;
-  width: 250px;
-}
-.app-notification {
-  position: absolute;
-  display: none;
-  width: 250px;
-  z-index: 100;
-  padding: 1rem;
-  padding-left: 2rem;
-  font-weight: bold;
-  transition: position 500ms ease-out;
-}
-.notify-container:hover .app-notification {
-  position: relative;
-}
-.app-notification.error {
-  display: block;
-  background: #f19f9fde;
-  animation:
-    movein 0.5s ease forwards,
-    moveout 0.5s 5s ease forwards;
-}
-.app-notification.success {
-  display: block;
-  background: #bcf19fde;
-  animation:
-    movein 0.5s ease forwards,
-    moveout 0.5s 5s ease forwards;
-}
-@keyframes movein {
-  from {
-    right: -250px;
+@layer base {
+
+  html {
+    cursor: url("/cursor.png") 4 8, pointer;
   }
-  to {
+
+  body {
+    background-color: black;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  @property --gradient-angle {
+    inherits: false;
+    initial-value: 0deg;
+    syntax: "<angle>";
+  }
+
+  .main-heading {
+    font-size: clamp(16px, calc(14vw + 1rem), 50pt);
+  }
+
+  .landing-container {
+    text-align: center;
+    background-color: unset;
+    align-items: center;
+    height: max(500px, 85lvh);
+
+    &>div {
+      background-color: rgb(30 26 26 / 70%);
+      backdrop-filter: blur(4px);
+      padding-top: 2rem;
+      border-radius: 10px;
+      height: 90%;
+
+      &>* {
+        opacity: 0;
+        filter: blur(10px);
+        translate: 0 0.8rem;
+        animation: blurin 1s ease-in-out forwards;
+      }
+
+      & h1 {
+        color: hsl(0 0 100% / 0.3);
+        background-image: linear-gradient(var(--gradient-angle), red, blue);
+        background-clip: text;
+        background-size: 100% 100%;
+        animation: rotatingGradient 5s linear infinite;
+      }
+
+      &>h2 {
+        animation-delay: 0.3s;
+
+      }
+
+      & .youtube {
+        color: #d32f2f !important;
+        font-size: 3.6rem;
+      }
+
+      & button {
+        padding: 1rem 1.5rem;
+        font-size: 20pt;
+        background-color: transparent;
+        border: 3px solid #eee;
+        cursor: pointer;
+
+      }
+    }
+  }
+
+  @keyframes rotatingGradient {
+    to {
+      --gradient-angle: 360deg;
+    }
+  }
+
+  @keyframes blurin {
+    to {
+      opacity: 1;
+      filter: blur(0px);
+      translate: 0 0rem;
+    }
+  }
+
+  .center-grid-container {
+    --inline-padding: 1rem;
+    --center-width: 90vw;
+    display: grid;
+    grid-template-columns:
+      minmax(var(--inline-padding), 1fr) [center-start] min(100% - (2 * var(--inline-padding)), var(--center-width)) [center-end] minmax(var(--inline-padding), 1fr);
+  }
+
+  .center-grid-container>* {
+    grid-column: center;
+  }
+
+  .notify-container {
+    position: fixed;
     right: 0;
+    top: 25%;
+    width: 250px;
+    overflow-x: hidden;
   }
-}
 
-@keyframes moveout {
-  from {
-    right: 0;
+  .app-notification {
+    position: relative;
+    width: 250px;
+    z-index: 101;
+    padding: 1rem;
+    padding-left: 2rem;
+    font-weight: bold;
+    transition: position 500ms ease-out;
+    margin-bottom: 0.25rem;
   }
-  to {
-    right: -250px;
+
+  .notify-container:hover .app-notification {
+    position: relative;
   }
-}
 
-.app-notification.success::before,
-.app-notification.error::before {
-  content: "";
-  width: 1rem;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-}
+  .app-notification.error {
+    --display-time: 6500;
+    display: block;
+    background: #f19f9fde;
+    animation:
+      movein 0.5s ease forwards,
+      moveout 0.5s calc((var(--display-time) - 500)*1ms) ease forwards;
+  }
 
-.app-notification.success::before {
-  background: #64e91c;
-}
-.app-notification.error::before {
-  background: #ed0000;
+  .app-notification.success {
+    display: block;
+    background: #bcf19fde;
+    animation:
+      movein 0.5s ease forwards,
+      moveout 0.5s calc((var(--display-time) - 500)*1ms) ease forwards;
+  }
+
+  @keyframes movein {
+    from {
+      right: -100%;
+    }
+
+    to {
+      right: 0;
+    }
+  }
+
+  @keyframes moveout {
+    from {
+      right: 0;
+    }
+
+    to {
+      right: -250px;
+    }
+  }
+
+  .app-notification.shown {
+    display: none;
+  }
+
+  .app-notification.success::before,
+  .app-notification.error::before {
+    content: "";
+    width: 1rem;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .app-notification.success::before {
+    background: #64e91c;
+  }
+
+  .app-notification.error::before {
+    background: #ed0000;
+  }
 }

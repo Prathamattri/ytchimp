@@ -4,17 +4,19 @@ import Layout from "@/components/Layout";
 import { RecoilRoot, useSetRecoilState } from "recoil";
 import { userState } from "@/store/atoms/user";
 import { useEffect } from "react";
-import Loader from "@/components/loader";
 import { api } from "@/utils";
 import "dotenv/config";
+import ThemeProviderWrapper from "@/components/ThemeProvider";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <RecoilRoot>
       <InitUser />
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
+      <ThemeProviderWrapper>
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      </ThemeProviderWrapper>
     </RecoilRoot>
   );
 }

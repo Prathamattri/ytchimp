@@ -1,6 +1,7 @@
 import { alertUser } from "@/store/atoms/alert";
 import { userWorkspaces } from "@/store/atoms/workspace";
 import { api } from "@/utils";
+import { MoreVert, SettingsSharp } from "@mui/icons-material";
 import {
   Button,
   Dialog,
@@ -11,7 +12,7 @@ import {
 } from "@mui/material";
 import { WorkspaceObjectTypes } from "common";
 import { useEffect, useState } from "react";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { v4 as uuidv4 } from "uuid";
 
 interface FormDataType
@@ -28,12 +29,24 @@ const EditWorkspace = ({ id, owned }: { id: string; owned: boolean }) => {
     name: "",
     participants: "",
   });
-  const setWorkspaces = useSetRecoilState(userWorkspaces);
+  const [workspaces, setWorkspaces] = useRecoilState(userWorkspaces);
   const setAlert = useSetRecoilState(alertUser);
 
   const handleClickOpen = () => {
     setOpen(true);
-    fetchWsData();
+    const ws = workspaces.wsCreated.find(ws => ws.id == id)
+    if (ws != undefined) {
+
+      setFormData({
+        ...ws,
+        participants: ws.participants
+          .map((item: any) => item.email)
+          .join(" "),
+      });
+    } else {
+      fetchWsData();
+    }
+
   };
 
   const handleClose = () => {
@@ -63,13 +76,13 @@ const EditWorkspace = ({ id, owned }: { id: string; owned: boolean }) => {
         id: uuidv4(),
         type: "success",
         message: res.data.msg,
+        markShown: false,
       },
     ]);
   }
 
   async function handleUpdate(e: any) {
     const { name, value } = e.target;
-    // console.log();
 
     setFormData((prevData) => ({
       ...prevData,
@@ -83,9 +96,9 @@ const EditWorkspace = ({ id, owned }: { id: string; owned: boolean }) => {
 
   return (
     <div style={{ display: `${!owned ? "none" : "block"}` }}>
-      <Button variant="outlined" onClick={handleClickOpen} disabled={!owned}>
-        Edit
-      </Button>
+      <div>
+        <SettingsSharp onClick={handleClickOpen} />
+      </div>
       <Dialog open={open} onClose={handleClose}>
         <DialogContent sx={{ padding: "2rem" }}>
           <DialogContentText>WORKSPACE DETAILS</DialogContentText>

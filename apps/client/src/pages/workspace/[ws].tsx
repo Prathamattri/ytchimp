@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { AxiosRequestConfig } from "axios";
 import {
   Box,
   Button,
@@ -9,13 +8,15 @@ import {
   Input,
   Typography,
 } from "@mui/material";
-import { api2 } from "@/utils";
 import { useRecoilValue } from "recoil";
 import { userAuthState, userLoadingState } from "@/store/selectors";
-import { config } from "dotenv";
 
-type UploadStatusType = { percentage: number, inProgress: boolean, completed: boolean, errorMsg: string }
-
+type UploadStatusType = {
+  percentage: number;
+  inProgress: boolean;
+  completed: boolean;
+  errorMsg: string;
+};
 
 const Upload = () => {
   const [vidFile, setVidFile] = useState<File>();
@@ -26,13 +27,14 @@ const Upload = () => {
     percentage: 0,
     inProgress: false,
     completed: false,
-    errorMsg: ""
-  })
+    errorMsg: "",
+  });
 
   const isAuthenticated = useRecoilValue(userAuthState);
   const isLoading = useRecoilValue(userLoadingState);
   const router = useRouter();
 
+  const workspaceName = router.query!.wsname;
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
       router.push("/");
@@ -44,7 +46,7 @@ const Upload = () => {
     const formData = new FormData();
     if (vidFile && title && description) {
       const packetSize = 5 * 1024 * 1024;
-      let partsQty = Math.ceil(vidFile.size / packetSize)
+      let partsQty = Math.ceil(vidFile.size / packetSize);
 
       let sliceStart = 0;
       for (let partNum = 1; partNum <= partsQty; partNum++) {
@@ -59,33 +61,39 @@ const Upload = () => {
         // formData.append("workspaceId", `${router.query.ws}`);
         // if (thumbnail) formData.append("thumbnail", thumbnail);
 
-        const headers = new Headers()
-        headers.append('Content-Range', `bytes ${sliceStart}-${sliceEnd - 1}/${vidFile.size}`)
+        const headers = new Headers();
+        headers.append(
+          "Content-Range",
+          `bytes ${sliceStart}-${sliceEnd - 1}/${vidFile.size}`,
+        );
         headers.append("Part-To-Process", `${partNum}`);
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_serverURL}/workspace/${router.query.ws}/upload/video`, {
-            method: "POST",
-            credentials: 'include',
-            headers: headers,
-            body: formData
-          })
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_serverURL}/workspace/${router.query.ws}/upload/video`,
+            {
+              method: "POST",
+              credentials: "include",
+              headers: headers,
+              body: formData,
+            },
+          );
           if (!res.ok) {
             throw new Error("Fetch request error: " + res);
           }
-          var completedPercentage = Math.floor(partNum / partsQty * 100);
+          var completedPercentage = Math.floor((partNum / partsQty) * 100);
           if (partNum == partsQty) {
-            setUploadStatus(prevState => ({
+            setUploadStatus((prevState) => ({
               ...prevState,
               percentage: completedPercentage,
               inProgress: false,
               completed: true,
-            }))
+            }));
           } else {
-            setUploadStatus(prevState => ({
+            setUploadStatus((prevState) => ({
               ...prevState,
               percentage: completedPercentage,
               inProgress: true,
-            }))
+            }));
           }
           const { uploadId } = await res.json();
           if (uploadId) {
@@ -93,13 +101,15 @@ const Upload = () => {
           }
         } catch (error: any) {
           console.log(error);
-          console.error("Error occurred while uploading part number " + partNum);
-          setUploadStatus(prevState => ({
+          console.error(
+            "Error occurred while uploading part number " + partNum,
+          );
+          setUploadStatus((prevState) => ({
             ...prevState,
             completed: false,
             errorMsg: error.msg,
-            inProgress: false
-          }))
+            inProgress: false,
+          }));
           break;
         }
         sliceStart = sliceEnd;
@@ -112,6 +122,10 @@ const Upload = () => {
         padding={2}
         sx={{ maxWidth: { sm: "100vw", md: "50vw" }, minWidth: "400px" }}
       >
+        <div style={{ textAlign: "center" }}>
+          <Typography variant="h1"> {workspaceName} </Typography>
+          <Typography variant="caption"> {router.query.ws} </Typography>
+        </div>
         <form onSubmit={handleSubmit}>
           <FormGroup>
             <Input
@@ -188,15 +202,27 @@ const Upload = () => {
   );
 };
 
-const UploadProgress = ({ uploadStatus }: { uploadStatus: UploadStatusType }) => {
+const UploadProgress = ({
+  uploadStatus,
+}: {
+  uploadStatus: UploadStatusType;
+}) => {
   return (
     <Box>
       <CircularProgress variant="determinate" value={uploadStatus.percentage} />
-      {uploadStatus.inProgress && <Typography color={"red"}>In Progress</Typography>}
-      {uploadStatus.completed && <Typography variant="h3" color={"green"}>Upload Complete</Typography>}
-      {uploadStatus.errorMsg && <Typography color={"red"}>In Progress</Typography>}
+      {uploadStatus.inProgress && (
+        <Typography color={"red"}>Upload is in progress <br />Please do not refresh! </Typography>
+      )}
+      {uploadStatus.completed && (
+        <Typography variant="h3" color={"green"}>
+          Upload Complete
+        </Typography>
+      )}
+      {uploadStatus.errorMsg && (
+        <Typography color={"red"}>{uploadStatus.errorMsg}</Typography>
+      )}
     </Box>
   );
-}
+};
 
 export default Upload;

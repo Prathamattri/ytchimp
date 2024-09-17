@@ -9,19 +9,20 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { userState } from "@/store/atoms/user";
 import { useRouter } from "next/navigation";
 import { userAuthState } from "@/store/selectors/userAuth";
 import { api } from "@/utils";
 import { alertUser } from "@/store/atoms/alert";
 import { v4 as uuidv4 } from "uuid";
+import { errorToJSON } from "next/dist/server/render";
 
-function Copyright(props: any) {
+export function Copyright(props: any) {
   return (
     <Typography variant="body2" align="center" {...props}>
       {"Copyright © "}
-      <Link color="inherit" href="https://mui.com/">
+      <Link color="inherit" href="https://prathamattri.in">
         YTCHIMP
       </Link>{" "}
       {new Date().getFullYear()}
@@ -43,19 +44,28 @@ export default function Login() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     try {
-      const res = await api.post(`/user/login`, {
-        data: {
-          email: data.get("email"),
-          password: data.get("password"),
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_serverURL}/user/login`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: data.get("email"),
+            password: data.get("password"),
+          }),
         },
-      });
-      const resData = await res.data;
+      );
+      const resData = await res.json();
       if (resData.type === "success") {
         setAlert([
           {
             id: uuidv4(),
             message: resData.msg,
             type: resData.type,
+            markShown: false,
           },
         ]);
         setUser({
@@ -66,22 +76,37 @@ export default function Login() {
         });
         router.push("/");
       } else {
-        setUser({
-          userEmail: null,
-          userName: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
+        throw resData;
       }
     } catch (error: any) {
-      setAlert((prevState) => [
-        ...prevState,
-        {
+      setUser({
+        userEmail: null,
+        userName: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+      if (error.msg instanceof Array) {
+        let errorMessageArray = error.msg.map((message: string) => ({
           id: uuidv4(),
-          message: error.response.data.msg,
-          type: "error",
-        },
-      ]);
+          message,
+          type: error.type,
+          markShown: false,
+        }))
+        setAlert((prevState) => [
+          ...prevState,
+          ...errorMessageArray
+        ])
+      } else {
+        setAlert((prevState) => [
+          ...prevState,
+          {
+            id: uuidv4(),
+            message: error.msg,
+            type: error.type,
+            markShown: false,
+          },
+        ]);
+      }
     }
   };
 
@@ -103,7 +128,7 @@ export default function Login() {
             color: "black",
           }}
         >
-          <LockOutlinedIcon fontSize="large" />
+          <LockOutlinedIcon fontSize="large" sx={{ color: "#ffffff" }} />
         </Avatar>
         <Typography component="h1" variant="h5">
           Welcome Back
@@ -133,7 +158,7 @@ export default function Login() {
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            sx={{ mt: 3, mb: 2, paddingY: "1rem", fontSize: "1rem" }}
           >
             Sign In
           </Button>

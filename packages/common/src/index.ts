@@ -14,7 +14,7 @@ export const WorkspaceObject = z.object({
     z.object({
       id: z.string(),
       email: z.string().optional(),
-    })
+    }),
   ),
 });
 
